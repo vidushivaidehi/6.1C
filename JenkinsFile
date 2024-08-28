@@ -1,0 +1,109 @@
+pipeline {
+    agent any
+
+    environment {
+        DIRECTORY_PATH = "/path/to/your/code" 
+        TESTING_ENVIRONMENT = "staging"
+        PRODUCTION_ENVIRONMENT = "VidushiVaidehi" 
+        EMAIL_RECIPIENTS = "vidushivaidehi@gmail.com"
+    
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                echo "Fetching the source code from the directory path specified by DIRECTORY_PATH environment variable"
+                // Example of actual code fetching:
+                // sh "git clone https://github.com/your/repository.git ${env.DIRECTORY_PATH}"
+                echo "Compiling the code and generating any necessary artifacts"
+                // Add actual compile command here, e.g., "mvn clean package"
+            }
+            post {
+                failure {
+                    mail to: "vidushivaidehi@gmail.com",
+                        subject: "Build Failed: ${currentBuild.fullDisplayName}",
+                        body: "Build failed at the 'Build' stage. Check Jenkins for details: ${env.BUILD_URL}"
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                echo "Running Unit tests"
+                // Replace with actual test command, e.g., "mvn test"
+                echo "Running Integration tests"
+                // Replace with integration test command
+            }
+            post {
+                failure {
+                    mail to: "vidushivaidehi@gmail.com",
+                        subject: "Test Failed: ${currentBuild.fullDisplayName}",
+                        body: "Tests failed at the 'Test' stage. Check Jenkins for details: ${env.BUILD_URL}"
+                }
+            }
+        }
+        stage('Code Quality Check') {
+            steps {
+                echo "Checking the quality of the code"
+                // Add a code quality tool like SonarQube if needed, e.g., "sonar-scanner"
+            }
+            post {
+                failure {
+                    mail to: "vidushivaidehi@gmail.com",
+                        subject: "Code Quality Check Failed: ${currentBuild.fullDisplayName}",
+                        body: "Code Quality Check failed. Check Jenkins for details: ${env.BUILD_URL}"
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo "Deploying the application to a testing environment: ${TESTING_ENVIRONMENT}"
+                // Add deployment command here, e.g., "scp -r ${env.DIRECTORY_PATH} user@testenv:/path/to/deploy"
+            }
+            post {
+                success {
+                    mail to: "vidushivaidehi@gmail.com",
+                        subject: "Deployment to TestEnv Successful: ${currentBuild.fullDisplayName}",
+                        body: "Application successfully deployed to the Testing Environment. Check Jenkins for details: ${env.BUILD_URL}"
+                }
+                failure {
+                    mail to: "vidushivaidehi@gmail.com",
+                        subject: "Deployment to TestEnv Failed: ${currentBuild.fullDisplayName}",
+                        body: "Deployment failed. Check Jenkins for details: ${env.BUILD_URL}"
+                }
+            }
+        }
+        stage('Approval') {
+            steps {
+                script {
+                    input message: 'Do you approve the deployment to production?', ok: 'Approve'
+                }
+            }
+        }
+        stage('Deploy to Production') {
+            steps {
+                echo "Deploying the code to the production environment: ${PRODUCTION_ENVIRONMENT}"
+                // Add production deployment command here, e.g., "scp -r ${env.DIRECTORY_PATH} user@production:/path/to/deploy"
+            }
+            post {
+                success {
+                    mail to: "vidushivaidehi@gmail.com",
+                        subject: "Production Deployment Successful: ${currentBuild.fullDisplayName}",
+                        body: "Application successfully deployed to the Production Environment. Check Jenkins for details: ${env.BUILD_URL}"
+                }
+                failure {
+                    mail to: "vidushivaidehi@gmail.com",
+                        subject: "Production Deployment Failed: ${currentBuild.fullDisplayName}",
+                        body: "Deployment to production failed. Check Jenkins for details: ${env.BUILD_URL}"
+                }
+            }
+        }
+    }
+    // Email Settings
+    post {
+        always {
+            mail to: "vidushivaidehi@gmail.com",
+                subject: "Pipeline Completed",
+                body: "Pipeline completed. Check Jenkins for details: ${env.BUILD_URL}"
+        }
+    }
+}
